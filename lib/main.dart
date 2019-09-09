@@ -48,7 +48,7 @@ class _HomeState extends State<Home> {
       pessoa.setAltura(double.parse(_heightController.text));
       pessoa.setGenero(_character);
 
-      _imc    = pessoa.calcula();
+      _imc    = "IMC: " + pessoa.calcula();
       _result = pessoa.classifica();
       _color = pessoa.getCor();
     });
