@@ -1,12 +1,13 @@
+import 'package:calculadora_imc/pessoa.dart';
 import 'package:flutter/material.dart';
 
-void main() => runApp(
-      MaterialApp(
-        home: Home(),
-        debugShowCheckedModeBanner: false,
-        
-      ),
-    );
+//enum SingingCharacter { masculino, feminino }
+String _character = "masculino";
+
+void main() => runApp(MaterialApp(
+      home: Home(),
+      debugShowCheckedModeBanner: false,
+    ));
 
 class Home extends StatefulWidget {
   @override
@@ -14,11 +15,15 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
   TextEditingController _weightController = TextEditingController();
   TextEditingController _heightController = TextEditingController();
+  GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   String _result;
+  String _imc;
+  Color _color;
+  Pessoa pessoa = new Pessoa();
+
 
   @override
   void initState() {
@@ -30,110 +35,115 @@ class _HomeState extends State<Home> {
     _weightController.text = '';
     _heightController.text = '';
     setState(() {
-      _result = 'Informe seus dados';
+      _imc = 'Informe seus dados';
+      _result = '';
+      _color = Colors.black;
+    });
+  }
+
+  void calculateImc() {
+
+    setState(() {
+      pessoa.setPeso(double.parse(_weightController.text));
+      pessoa.setAltura(double.parse(_heightController.text));
+      pessoa.setGenero(_character);
+
+      _imc    = pessoa.calcula();
+      _result = pessoa.classifica();
+      _color = pessoa.getCor();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: buildAppBar(),
+        appBar: AppBar(
+          title: Text('Calculadora de IMC'),
+          backgroundColor: Colors.blue,
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.refresh),
+              onPressed: () {
+                resetFields();
+              },
+            )
+          ],
+        ),
         backgroundColor: Colors.white,
         body: SingleChildScrollView(
-            padding: EdgeInsets.all(20.0), child: buildForm()));
-  }
-
-  AppBar buildAppBar() {
-    return AppBar(
-      title: Text('Calculadora de IMC'),
-      backgroundColor: Colors.blue,
-      actions: <Widget>[
-        IconButton(
-          icon: Icon(Icons.refresh),
-          onPressed: () {
-            resetFields();
-          },
-        )
-      ],
-    );
-  }
-
-  Form buildForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
-          buildTextFormField(
-              label: "Peso (kg)",
-              error: "Insira seu peso!",
-              controller: _weightController),
-          buildTextFormField(
-              label: "Altura (cm)",
-              error: "Insira uma altura!",
-              controller: _heightController),
-          buildTextResult(),
-          buildCalculateButton(),
-        ],
-      ),
-    );
-  }
-
-  void calculateImc() {
-    double weight = double.parse(_weightController.text);
-    double height = double.parse(_heightController.text) / 100.0;
-    double imc = weight / (height * height);
-
-    setState(() {
-      _result = "IMC = ${imc.toStringAsPrecision(2)}\n";
-      if (imc < 18.6)
-        _result += "Abaixo do peso";
-      else if (imc < 25.0)
-        _result += "Peso ideal";
-      else if (imc < 30.0)
-        _result += "Levemente acima do peso";
-      else if (imc < 35.0)
-        _result += "Obesidade Grau I";
-      else if (imc < 40.0)
-        _result += "Obesidade Grau II";
-      else
-        _result += "Obesidade Grau IIII";
-    });
-  }
-
-  Widget buildCalculateButton() {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 36.0),
-      child: RaisedButton(
-        onPressed: () {
-          if (_formKey.currentState.validate()) {
-            calculateImc();
-          }
-        },
-        child: Text('CALCULAR', style: TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-
-  Widget buildTextResult() {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 36.0),
-      child: Text(
-        _result,
-        textAlign: TextAlign.center,
-      ),
-    );
-  }
-
-  Widget buildTextFormField(
-      {TextEditingController controller, String error, String label}) {
-    return TextFormField(
-      keyboardType: TextInputType.number,
-      decoration: InputDecoration(labelText: label),
-      controller: controller,
-      validator: (text) {
-        return text.isEmpty ? error : null;
-      },
-    );
+            padding: EdgeInsets.all(20.0),
+            child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    TextFormField(
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(labelText: 'Peso (kg)'),
+                      controller: _weightController,
+                      validator: (text) {
+                        return text.isEmpty ? "Insira seu peso!" : null;
+                      },
+                    ),
+                    TextFormField(
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(labelText: 'Altura (cm)'),
+                      controller: _heightController,
+                      validator: (text) {
+                        return text.isEmpty ? "Insira sua altura!" : null;
+                      },
+                    ),
+                    ListTile(
+                              title: const Text('Masculino'),
+                              leading: Radio(
+                                value: "masculino",
+                                groupValue: _character,
+                                onChanged: (String value) {
+                                  setState(() { _character = value; });
+                                },
+                              ),
+                            ),
+                    ListTile(
+                              title: const Text('Feminino'),
+                              leading: Radio(
+                                value: "feminino",
+                                groupValue: _character,
+                                onChanged: (String value) {
+                                  setState(() { _character = value; });
+                                },
+                              ),
+                            ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 20.0),                      
+                      child: Text(
+                        _imc, 
+                        textAlign: TextAlign.center,
+                        style: new TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)
+                        ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10.0),                      
+                      child: Text(
+                        _result, 
+                        textAlign: TextAlign.center,
+                        style: new TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold, color: _color)
+                        ),
+                    ),
+                    Padding(
+                        padding: EdgeInsets.symmetric(vertical: 30.0),
+                        child: Container(
+                            height: 50,
+                            child: RaisedButton(
+                              color: Colors.blueAccent,
+                              onPressed: () {
+                                if (_formKey.currentState.validate()) {
+                                  calculateImc();
+                                }
+                              },
+                              child: Text('CALCULAR', style: TextStyle(color: Colors.white)),
+                            ))),                    
+                            
+                  ],
+                ))));
   }
 }
